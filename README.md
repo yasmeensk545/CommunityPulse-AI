@@ -190,4 +190,23 @@ Demo mode uses localStorage. localStorage is not shared across devices. For prod
 
 ---
 
+
+
+# CommunityPulse AI
+
+Live: https://community-pulse-ai-cyan.vercel.app/
+
+
+## How it works
+- Citizen: No Login, big Report button, gets ID CP-2026-XXXXX
+- Track: Only public data (ID, Status, Date, Public Note) - privacy safe
+- Department: Login at /department-login, filters Pending/In Progress/Resolved
+- Update: Public note for citizen + Internal note for staff
+- AI: Auto category + Priority
+
+## Run
+npm install
+npm run dev
+npm run build -> success
+
 *CommunityPulse AI — Empowering communities to report smarter, respond faster, and build better neighborhoods.*
