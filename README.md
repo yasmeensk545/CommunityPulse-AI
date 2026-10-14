@@ -209,4 +209,7 @@ npm install
 npm run dev
 npm run build -> success
 
+
+Solves: Citizen can report without login barrier, Track without privacy leak, Dept can filter and resolve
+
 *CommunityPulse AI — Empowering communities to report smarter, respond faster, and build better neighborhoods.*
