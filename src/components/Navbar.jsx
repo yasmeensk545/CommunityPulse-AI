@@ -3,16 +3,19 @@ import {
   Activity, 
   Plus, 
   Menu, 
-  Key, 
   Sparkles,
   HelpCircle,
-  Database
+  ShieldCheck,
+  Search,
+  Home,
+  List
 } from 'lucide-react';
 import { storageService } from '../services/storage.js';
 
 export function Navbar({
+  activeTab,
+  setActiveTab,
   onOpenReportModal,
-  onOpenSettingsModal,
   isSidebarOpen,
   setIsSidebarOpen,
   onOpenDemoGuide
@@ -33,7 +36,11 @@ export function Navbar({
           <Menu size={18} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div 
+          onClick={() => setActiveTab('home')}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
+          title="Return to Home"
+        >
           <div
             style={{
               width: '36px',
@@ -70,71 +77,119 @@ export function Navbar({
               </span>
             </div>
             <p className="text-muted" style={{ fontSize: '0.72rem', display: 'none', marginTop: '-2px' }} id="navbar-tagline">
-              Report smarter. Respond faster. Build better communities.
+              Make Your Community Better
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        {/* AI Engine Status Pill */}
+      {/* Middle: Desktop Citizen Navigation Pills */}
+      <nav style={{ display: 'none', alignItems: 'center', gap: '0.35rem' }} id="desktop-nav-pills">
         <button
-          onClick={onOpenSettingsModal}
-          className="btn btn-secondary btn-sm"
-          title={hasApiKey ? 'Gemini API Active - Click to manage' : 'Local Heuristics Active - Click to configure Gemini API Key'}
+          onClick={() => setActiveTab('home')}
+          className="btn btn-sm"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            fontSize: '0.75rem',
-            padding: '0.35rem 0.65rem'
+            backgroundColor: activeTab === 'home' ? '#F0FDFA' : 'transparent',
+            color: activeTab === 'home' ? '#0F766E' : '#475569',
+            fontWeight: activeTab === 'home' ? 700 : 500,
+            borderRadius: '8px',
+            fontSize: '0.825rem'
           }}
         >
-          {hasApiKey ? (
-            <>
-              <Sparkles size={14} style={{ color: '#16A34A' }} />
-              <span style={{ color: '#166534', fontWeight: 600 }}>Gemini AI Ready</span>
-            </>
-          ) : (
-            <>
-              <Key size={14} style={{ color: '#0D9488' }} />
-              <span style={{ color: '#0F766E', fontWeight: 500 }}>Local AI Engine</span>
-            </>
-          )}
+          <Home size={15} />
+          <span>Home</span>
         </button>
 
-        {/* Storage / Data Settings */}
         <button
-          onClick={onOpenSettingsModal}
-          className="btn btn-secondary btn-sm"
-          title="Data Storage & Sample Controls"
-          style={{ padding: '0.4rem 0.6rem' }}
-          aria-label="Storage Settings"
+          onClick={() => setActiveTab('track')}
+          className="btn btn-sm"
+          style={{
+            backgroundColor: activeTab === 'track' ? '#F0FDFA' : 'transparent',
+            color: activeTab === 'track' ? '#0F766E' : '#475569',
+            fontWeight: activeTab === 'track' ? 700 : 500,
+            borderRadius: '8px',
+            fontSize: '0.825rem'
+          }}
         >
-          <Database size={16} />
+          <Search size={15} />
+          <span>Track Report</span>
         </button>
 
+        <button
+          onClick={() => setActiveTab('directory')}
+          className="btn btn-sm"
+          style={{
+            backgroundColor: activeTab === 'directory' ? '#F0FDFA' : 'transparent',
+            color: activeTab === 'directory' ? '#0F766E' : '#475569',
+            fontWeight: activeTab === 'directory' ? 700 : 500,
+            borderRadius: '8px',
+            fontSize: '0.825rem'
+          }}
+        >
+          <List size={15} />
+          <span>All Issues</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('admin')}
+          className="btn btn-sm"
+          style={{
+            backgroundColor: activeTab === 'admin' ? '#1E293B' : '#F1F5F9',
+            color: activeTab === 'admin' ? '#FFFFFF' : '#334155',
+            fontWeight: 600,
+            borderRadius: '8px',
+            fontSize: '0.78rem',
+            marginLeft: '0.5rem'
+          }}
+          title="Administrative operations, analytics & preventive insights"
+        >
+          <ShieldCheck size={14} />
+          <span>Admin & Insights</span>
+        </button>
+      </nav>
+
+      {/* Right: Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
         {/* Help / Guide */}
         <button
           onClick={onOpenDemoGuide}
           className="btn btn-secondary btn-sm"
-          title="About CommunityPulse AI & Challenge Alignment"
+          title="About CommunityPulse AI & How It Works"
           style={{ padding: '0.4rem 0.6rem' }}
-          aria-label="Demo Information"
+          aria-label="Demo Guide"
         >
           <HelpCircle size={16} />
         </button>
 
-        {/* Primary CTA: Report Issue */}
+        {/* AI Engine Status Pill (subtle) */}
+        <span
+          title={hasApiKey ? 'Google Gemini 2.5 Flash Connected' : 'Offline Rule-Based Triage Engine Active'}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            fontSize: '0.72rem',
+            padding: '0.25rem 0.55rem',
+            borderRadius: '6px',
+            backgroundColor: hasApiKey ? '#F0FDF4' : '#F0FDFA',
+            color: hasApiKey ? '#166534' : '#0F766E',
+            border: `1px solid ${hasApiKey ? '#BBF7D0' : '#CCFBF1'}`
+          }}
+          id="navbar-ai-badge"
+        >
+          <Sparkles size={12} />
+          <span>{hasApiKey ? 'Gemini AI' : 'Offline AI'}</span>
+        </span>
+
+        {/* Primary CTA: Report a Problem */}
         <button
           onClick={onOpenReportModal}
           className="btn btn-primary"
-          style={{ fontWeight: 600 }}
+          style={{ fontWeight: 700, padding: '0.55rem 1.1rem' }}
           id="btn-report-issue-main"
         >
           <Plus size={16} />
-          <span>Report an Issue</span>
+          <span>Report a Problem</span>
         </button>
       </div>
 
@@ -144,9 +199,19 @@ export function Navbar({
             display: block !important;
           }
         }
+        @media (min-width: 860px) {
+          #desktop-nav-pills {
+            display: flex !important;
+          }
+        }
         @media (max-width: 768px) {
           #mobile-menu-btn {
             display: inline-flex !important;
+          }
+        }
+        @media (max-width: 520px) {
+          #navbar-ai-badge {
+            display: none !important;
           }
         }
       `}</style>

@@ -558,3 +558,174 @@ input, select, textarea {
     padding: 0 1rem;
   }
 }
+
+/* Citizen-Focused UI Components */
+.citizen-hero {
+  background: linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 100%);
+  border: 1px solid #CCFBF1;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.citizen-hero-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--navy-900);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.citizen-hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--navy-600);
+  margin-top: 0.75rem;
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.citizen-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+/* 3-Card Summary Grid */
+.citizen-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .citizen-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .citizen-hero {
+    padding: 2rem 1.25rem;
+  }
+  .citizen-hero-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Friendly Category Selection Cards */
+.category-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .category-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.category-select-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-light);
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.category-select-card:hover {
+  border-color: var(--teal-500);
+  background-color: var(--teal-50);
+  transform: translateY(-2px);
+}
+
+.category-select-card.active {
+  border-color: var(--teal-600);
+  background-color: #F0FDFA;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+}
+
+/* Stepper / Timeline for tracking */
+.tracking-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 0 1rem;
+}
+
+.tracking-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.tracking-step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy-500);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+}
+
+.tracking-step.completed .tracking-step-circle {
+  background: var(--teal-600);
+  border-color: var(--teal-600);
+  color: #FFFFFF;
+}
+
+.tracking-step.current .tracking-step-circle {
+  background: #FFFFFF;
+  border-color: var(--teal-600);
+  color: var(--teal-700);
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+}
+
+.tracking-step-label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy-700);
+  text-align: center;
+}
+
+.tracking-stepper-line {
+  position: absolute;
+  top: 20px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: var(--border-light);
+  z-index: 1;
+}
+
+.tracking-stepper-fill {
+  height: 100%;
+  background: var(--teal-600);
+  transition: width 300ms ease;
+}
+

@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { Navbar } from './components/Navbar.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
-import { DashboardView } from './components/DashboardView.jsx';
+import { CitizenHomeView } from './components/CitizenHomeView.jsx';
+import { TrackReportView } from './components/TrackReportView.jsx';
 import { IssueDirectory } from './components/IssueDirectory.jsx';
-import { AnalyticsView } from './components/AnalyticsView.jsx';
-import { InsightsView } from './components/InsightsView.jsx';
+import { AdminPortalView } from './components/AdminPortalView.jsx';
 import { ReportFormModal } from './components/ReportFormModal.jsx';
 import { IssueDetailModal } from './components/IssueDetailModal.jsx';
 import { SettingsModal } from './components/SettingsModal.jsx';
@@ -13,9 +13,11 @@ import { Toast } from './components/Toast.jsx';
 import { storageService } from './services/storage.js';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // 'home' is the default citizen-friendly view!
+  const [activeTab, setActiveTab] = useState('home');
   const [reports, setReports] = useState(() => storageService.getReports());
   const [selectedReport, setSelectedReport] = useState(null);
+  const [trackingReportId, setTrackingReportId] = useState('');
 
   // Modals state
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -47,8 +49,11 @@ export default function App() {
     try {
       const saved = storageService.saveReport(newReportData);
       setReports(storageService.getReports());
-      triggerToast(`Civic report #${saved.id} submitted and prioritized!`, 'success');
+      triggerToast(`Report #${saved.id} submitted! City teams have been notified.`, 'success');
       setIsReportModalOpen(false);
+      // Automatically switch to tracking view so the citizen sees their report timeline!
+      setTrackingReportId(saved.id);
+      setActiveTab('track');
     } catch (err) {
       triggerToast(`Failed to save report: ${err.message}`, 'error');
     }
@@ -60,7 +65,7 @@ export default function App() {
       const updated = storageService.updateReport(id, { status: newStatus });
       setReports(storageService.getReports());
       setSelectedReport(updated);
-      triggerToast(`Report #${id} updated to status "${newStatus}".`, 'success');
+      triggerToast(`Report #${id} updated to "${newStatus}".`, 'success');
     } catch (err) {
       triggerToast(`Status change failed: ${err.message}`, 'error');
     }
@@ -84,7 +89,7 @@ export default function App() {
       storageService.deleteReport(id);
       setReports(storageService.getReports());
       setSelectedReport(null);
-      triggerToast(`Report #${id} removed from civic queue.`, 'info');
+      triggerToast(`Report #${id} removed.`, 'info');
     } catch (err) {
       triggerToast(`Failed to delete report: ${err.message}`, 'error');
     }
@@ -113,7 +118,6 @@ export default function App() {
 
   // Select report and open modal
   const handleSelectReport = (report) => {
-    // Refresh latest version from current reports array
     const fresh = reports.find(r => r.id === report.id) || report;
     setSelectedReport(fresh);
   };
@@ -125,9 +129,10 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         reports={reports}
+        onOpenReportModal={() => setIsReportModalOpen(true)}
         onResetData={() => {
           handleResetData();
-          triggerToast('Reset to standard sample community reports.', 'success');
+          triggerToast('Restored sample neighbourhood reports.', 'success');
         }}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         isSidebarOpen={isSidebarOpen}
@@ -138,8 +143,9 @@ export default function App() {
       <div className="main-content">
         {/* Top Navbar */}
         <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
           onOpenReportModal={() => setIsReportModalOpen(true)}
-          onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
           onOpenDemoGuide={() => setIsDemoGuideOpen(true)}
@@ -147,16 +153,26 @@ export default function App() {
 
         {/* View Switcher Container */}
         <main className="content-container">
-          {activeTab === 'dashboard' && (
-            <DashboardView
+          {/* 1. Citizen Home Page */}
+          {activeTab === 'home' && (
+            <CitizenHomeView
               reports={reports}
-              onSelectReport={handleSelectReport}
               onOpenReportModal={() => setIsReportModalOpen(true)}
+              onNavigateToTrack={() => setActiveTab('track')}
+              onSelectReport={handleSelectReport}
               onViewAllReports={() => setActiveTab('directory')}
-              onViewAnalytics={() => setActiveTab('analytics')}
             />
           )}
 
+          {/* 2. Track Report View */}
+          {activeTab === 'track' && (
+            <TrackReportView
+              reports={reports}
+              initialReportId={trackingReportId}
+            />
+          )}
+
+          {/* 3. All Community Issues Directory */}
           {activeTab === 'directory' && (
             <IssueDirectory
               reports={reports}
@@ -165,12 +181,14 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsView reports={reports} />
-          )}
-
-          {activeTab === 'insights' && (
-            <InsightsView reports={reports} />
+          {/* 4. Admin & Insights Portal */}
+          {activeTab === 'admin' && (
+            <AdminPortalView
+              reports={reports}
+              onSelectReport={handleSelectReport}
+              onOpenReportModal={() => setIsReportModalOpen(true)}
+              onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+            />
           )}
         </main>
 
@@ -194,8 +212,13 @@ export default function App() {
             <strong style={{ color: '#0F172A' }}>CommunityPulse AI</strong> — <em>Report smarter. Respond faster. Build better communities.</em>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span>Built for “AI for Better Living & Smarter Communities”</span>
-            <span style={{ color: '#0D9488', fontWeight: 600 }}>Demo Storage Tier</span>
+            <span>“AI for Better Living & Smarter Communities”</span>
+            <button
+              onClick={() => setActiveTab('admin')}
+              style={{ color: '#0D9488', fontWeight: 600, textDecoration: 'underline', fontSize: '0.75rem' }}
+            >
+              City Admin Portal
+            </button>
           </div>
         </footer>
       </div>

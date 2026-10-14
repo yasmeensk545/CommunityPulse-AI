@@ -1,20 +1,22 @@
 import React from 'react';
 import { 
-  LayoutDashboard, 
+  Home, 
+  Search, 
   ClipboardList, 
-  BarChart3, 
-  Lightbulb, 
-  SlidersHorizontal,
+  ShieldCheck, 
   RotateCcw,
+  SlidersHorizontal,
   ShieldAlert,
   ChevronRight,
-  X
+  X,
+  Plus
 } from 'lucide-react';
 
 export function Sidebar({
   activeTab,
   setActiveTab,
   reports = [],
+  onOpenReportModal,
   onResetData,
   onOpenSettings,
   isSidebarOpen,
@@ -22,35 +24,33 @@ export function Sidebar({
 }) {
   const totalCount = reports.length;
   const criticalCount = reports.filter(r => r.priority === 'Critical' && r.status !== 'Resolved').length;
-  const openCount = reports.filter(r => r.status !== 'Resolved').length;
 
   const navItems = [
     {
-      id: 'dashboard',
-      label: 'Overview',
-      icon: LayoutDashboard,
-      badge: criticalCount > 0 ? `${criticalCount} alert${criticalCount > 1 ? 's' : ''}` : null,
-      badgeType: criticalCount > 0 ? 'critical' : null
-    },
-    {
-      id: 'directory',
-      label: 'Issue Directory',
-      icon: ClipboardList,
-      badge: `${openCount} active`,
-      badgeType: 'neutral'
-    },
-    {
-      id: 'analytics',
-      label: 'Live Analytics',
-      icon: BarChart3,
+      id: 'home',
+      label: 'Home',
+      icon: Home,
       badge: null
     },
     {
-      id: 'insights',
-      label: 'Community Insights',
-      icon: Lightbulb,
-      badge: 'AI',
-      badgeType: 'teal'
+      id: 'track',
+      label: 'Track a Report',
+      icon: Search,
+      badge: null
+    },
+    {
+      id: 'directory',
+      label: 'All Community Issues',
+      icon: ClipboardList,
+      badge: `${totalCount}`,
+      badgeType: 'neutral'
+    },
+    {
+      id: 'admin',
+      label: 'Admin & Insights',
+      icon: ShieldCheck,
+      badge: criticalCount > 0 ? `${criticalCount} alert${criticalCount > 1 ? 's' : ''}` : 'Portal',
+      badgeType: criticalCount > 0 ? 'critical' : 'teal'
     }
   ];
 
@@ -82,7 +82,7 @@ export function Sidebar({
           }}
         >
           <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B' }}>
-            Navigation
+            Menu
           </span>
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -94,8 +94,23 @@ export function Sidebar({
           </button>
         </div>
 
+        {/* Primary Action Button inside Sidebar */}
+        <div style={{ padding: '1rem 0.85rem 0.5rem' }}>
+          <button
+            onClick={() => {
+              onOpenReportModal();
+              setIsSidebarOpen(false);
+            }}
+            className="btn btn-primary"
+            style={{ width: '100%', justifyContent: 'center', padding: '0.65rem 1rem', fontWeight: 700 }}
+          >
+            <Plus size={16} />
+            <span>Report a Problem</span>
+          </button>
+        </div>
+
         {/* Navigation List */}
-        <nav style={{ padding: '1rem 0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <nav style={{ padding: '0.75rem 0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -114,7 +129,7 @@ export function Sidebar({
                   borderRadius: '10px',
                   backgroundColor: isActive ? '#F0FDFA' : 'transparent',
                   color: isActive ? '#0F766E' : '#334155',
-                  fontWeight: isActive ? 600 : 500,
+                  fontWeight: isActive ? 700 : 500,
                   fontSize: '0.875rem',
                   border: isActive ? '1px solid #CCFBF1' : '1px solid transparent',
                   transition: 'all 150ms ease',
@@ -171,43 +186,40 @@ export function Sidebar({
 
         {/* Priority Alert Box */}
         {criticalCount > 0 && (
-          <div style={{ padding: '0 0.85rem 1rem' }}>
+          <div style={{ padding: '0 0.85rem 0.75rem' }}>
             <div
               style={{
                 backgroundColor: '#FEF2F2',
-                border: '1px solid #FEE2E2',
-                borderRadius: '12px',
-                padding: '0.85rem',
+                border: '1px solid #FCA5A5',
+                borderRadius: '10px',
+                padding: '0.75rem',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '0.65rem'
+                gap: '0.5rem'
               }}
             >
-              <ShieldAlert size={18} style={{ color: '#DC2626', flexShrink: 0, marginTop: '2px' }} />
+              <ShieldAlert size={16} style={{ color: '#DC2626', flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#991B1B' }}>
-                  {criticalCount} Critical Issue{criticalCount > 1 ? 's' : ''}
-                </p>
-                <p style={{ fontSize: '0.72rem', color: '#B91C1C', marginTop: '2px', lineHeight: 1.3 }}>
-                  Active safety hazards require human dispatch attention.
+                <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#991B1B' }}>
+                  {criticalCount} Urgent Issue{criticalCount > 1 ? 's' : ''} Active
                 </p>
                 <button
                   onClick={() => {
-                    setActiveTab('directory');
+                    setActiveTab('admin');
                     setIsSidebarOpen(false);
                   }}
                   style={{
                     fontSize: '0.72rem',
                     fontWeight: 600,
                     color: '#B91C1C',
-                    marginTop: '0.4rem',
+                    marginTop: '0.2rem',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '2px',
                     textDecoration: 'underline'
                   }}
                 >
-                  Review Critical Queue <ChevronRight size={12} />
+                  View City Queue <ChevronRight size={12} />
                 </button>
               </div>
             </div>
@@ -222,7 +234,7 @@ export function Sidebar({
             backgroundColor: '#FAFAFA'
           }}
         >
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem' }}>
             <button
               onClick={onResetData}
               className="btn btn-secondary btn-sm"
@@ -236,15 +248,15 @@ export function Sidebar({
               onClick={onOpenSettings}
               className="btn btn-secondary btn-sm"
               style={{ padding: '0.4rem 0.5rem' }}
-              title="Storage & Settings"
+              title="Settings & Diagnostics"
             >
               <SlidersHorizontal size={14} />
             </button>
           </div>
 
           <div style={{ fontSize: '0.7rem', color: '#64748B', lineHeight: 1.3 }}>
-            <span style={{ fontWeight: 600, color: '#334155' }}>Prototype Mode</span>
-            <p>Data persisted in local browser storage ({totalCount} reports logged).</p>
+            <span style={{ fontWeight: 600, color: '#334155' }}>CommunityPulse Demo</span>
+            <p>{totalCount} reports logged locally.</p>
           </div>
         </div>
       </aside>
