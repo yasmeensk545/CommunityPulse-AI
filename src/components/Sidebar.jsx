@@ -3,14 +3,18 @@ import {
   Home, 
   Search, 
   ClipboardList, 
-  ShieldCheck, 
+  Building2, 
+  BarChart3, 
+  Lightbulb, 
   RotateCcw,
   SlidersHorizontal,
   ShieldAlert,
   ChevronRight,
   X,
-  Plus
+  Plus,
+  Lock
 } from 'lucide-react';
+import { storageService } from '../services/storage.js';
 
 export function Sidebar({
   activeTab,
@@ -22,6 +26,7 @@ export function Sidebar({
   isSidebarOpen,
   setIsSidebarOpen
 }) {
+  const isStaffLoggedIn = storageService.isStaffAuthenticated();
   const totalCount = reports.length;
   const criticalCount = reports.filter(r => r.priority === 'Critical' && r.status !== 'Resolved').length;
 
@@ -34,23 +39,35 @@ export function Sidebar({
     },
     {
       id: 'track',
-      label: 'Track a Report',
+      label: 'Track My Report',
       icon: Search,
       badge: null
     },
     {
       id: 'directory',
-      label: 'All Community Issues',
+      label: 'Community Issues',
       icon: ClipboardList,
       badge: `${totalCount}`,
       badgeType: 'neutral'
     },
     {
-      id: 'admin',
-      label: 'Admin & Insights',
-      icon: ShieldCheck,
-      badge: criticalCount > 0 ? `${criticalCount} alert${criticalCount > 1 ? 's' : ''}` : 'Portal',
-      badgeType: criticalCount > 0 ? 'critical' : 'teal'
+      id: 'department',
+      label: isStaffLoggedIn ? 'Department Dashboard' : 'Staff Portal (Login)',
+      icon: isStaffLoggedIn ? Building2 : Lock,
+      badge: isStaffLoggedIn ? 'Staff' : 'Protected',
+      badgeType: isStaffLoggedIn ? 'blue' : 'neutral'
+    },
+    {
+      id: 'analytics',
+      label: 'Live Analytics',
+      icon: BarChart3,
+      badge: null
+    },
+    {
+      id: 'insights',
+      label: 'Community Insights',
+      icon: Lightbulb,
+      badge: null
     }
   ];
 
@@ -82,7 +99,7 @@ export function Sidebar({
           }}
         >
           <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B' }}>
-            Menu
+            CommunityPulse
           </span>
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -94,15 +111,16 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Primary Action Button inside Sidebar */}
+        {/* Primary Action Button inside Sidebar: Blue */}
         <div style={{ padding: '1rem 0.85rem 0.5rem' }}>
           <button
             onClick={() => {
               onOpenReportModal();
               setIsSidebarOpen(false);
             }}
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '0.65rem 1rem', fontWeight: 700 }}
+            className="btn btn-blue"
+            style={{ width: '100%', justifyContent: 'center', padding: '0.7rem 1rem', fontWeight: 700, borderRadius: '10px' }}
+            id="sidebar-report-btn"
           >
             <Plus size={16} />
             <span>Report a Problem</span>
@@ -110,8 +128,12 @@ export function Sidebar({
         </div>
 
         {/* Navigation List */}
-        <nav style={{ padding: '0.75rem 0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-          {navItems.map(item => {
+        <nav style={{ padding: '0.75rem 0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#94A3B8', padding: '0.25rem 0.5rem' }}>
+            Citizen Services
+          </span>
+
+          {navItems.slice(0, 3).map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -125,25 +147,23 @@ export function Sidebar({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '0.7rem 0.9rem',
+                  padding: '0.65rem 0.85rem',
                   borderRadius: '10px',
-                  backgroundColor: isActive ? '#F0FDFA' : 'transparent',
-                  color: isActive ? '#0F766E' : '#334155',
+                  backgroundColor: isActive ? '#EFF6FF' : 'transparent',
+                  color: isActive ? '#2563EB' : '#334155',
                   fontWeight: isActive ? 700 : 500,
-                  fontSize: '0.875rem',
-                  border: isActive ? '1px solid #CCFBF1' : '1px solid transparent',
-                  transition: 'all 150ms ease',
+                  fontSize: '0.85rem',
+                  border: isActive ? '1px solid #BFDBFE' : '1px solid transparent',
                   textAlign: 'left',
                   width: '100%'
                 }}
                 className="sidebar-nav-btn"
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   <Icon
-                    size={18}
+                    size={17}
                     style={{
-                      color: isActive ? '#0D9488' : '#64748B',
-                      transition: 'color 150ms ease'
+                      color: isActive ? '#2563EB' : '#64748B'
                     }}
                   />
                   <span>{item.label}</span>
@@ -154,26 +174,80 @@ export function Sidebar({
                     style={{
                       fontSize: '0.7rem',
                       fontWeight: 700,
-                      padding: '0.15rem 0.5rem',
+                      padding: '0.1rem 0.45rem',
                       borderRadius: '9999px',
-                      backgroundColor:
-                        item.badgeType === 'critical'
-                          ? '#FEE2E2'
-                          : item.badgeType === 'teal'
-                          ? '#CCFBF1'
-                          : '#F1F5F9',
-                      color:
-                        item.badgeType === 'critical'
-                          ? '#991B1B'
-                          : item.badgeType === 'teal'
-                          ? '#0F766E'
-                          : '#475569',
-                      border:
-                        item.badgeType === 'critical'
-                          ? '1px solid #FCA5A5'
-                          : item.badgeType === 'teal'
-                          ? '1px solid #99F6E4'
-                          : '1px solid #E2E8F0'
+                      backgroundColor: '#F1F5F9',
+                      color: '#475569',
+                      border: '1px solid #E2E8F0'
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-light)', margin: '0.5rem 0' }} />
+
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#94A3B8', padding: '0.25rem 0.5rem' }}>
+            Municipal & Insights
+          </span>
+
+          {navItems.slice(3).map(item => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id || (item.id === 'department' && (activeTab === 'department' || activeTab === 'department-login'));
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (item.id === 'department') {
+                    if (storageService.isStaffAuthenticated()) {
+                      setActiveTab('department');
+                    } else {
+                      setActiveTab('department-login');
+                    }
+                  } else {
+                    setActiveTab(item.id);
+                  }
+                  setIsSidebarOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '10px',
+                  backgroundColor: isActive ? '#EFF6FF' : 'transparent',
+                  color: isActive ? '#2563EB' : '#334155',
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: '0.85rem',
+                  border: isActive ? '1px solid #BFDBFE' : '1px solid transparent',
+                  textAlign: 'left',
+                  width: '100%'
+                }}
+                className="sidebar-nav-btn"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <Icon
+                    size={17}
+                    style={{
+                      color: isActive ? '#2563EB' : '#64748B'
+                    }}
+                  />
+                  <span>{item.label}</span>
+                </div>
+
+                {item.badge && (
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      padding: '0.1rem 0.45rem',
+                      borderRadius: '9999px',
+                      backgroundColor: item.badgeType === 'blue' ? '#DBEAFE' : '#F1F5F9',
+                      color: item.badgeType === 'blue' ? '#1E40AF' : '#64748B',
+                      border: item.badgeType === 'blue' ? '1px solid #93C5FD' : '1px solid #E2E8F0'
                     }}
                   >
                     {item.badge}
@@ -205,7 +279,11 @@ export function Sidebar({
                 </p>
                 <button
                   onClick={() => {
-                    setActiveTab('admin');
+                    if (storageService.isStaffAuthenticated()) {
+                      setActiveTab('department');
+                    } else {
+                      setActiveTab('department-login');
+                    }
                     setIsSidebarOpen(false);
                   }}
                   style={{
@@ -219,7 +297,7 @@ export function Sidebar({
                     textDecoration: 'underline'
                   }}
                 >
-                  View City Queue <ChevronRight size={12} />
+                  Inspect in Staff Queue <ChevronRight size={12} />
                 </button>
               </div>
             </div>
@@ -255,8 +333,8 @@ export function Sidebar({
           </div>
 
           <div style={{ fontSize: '0.7rem', color: '#64748B', lineHeight: 1.3 }}>
-            <span style={{ fontWeight: 600, color: '#334155' }}>CommunityPulse Demo</span>
-            <p>{totalCount} reports logged locally.</p>
+            <span style={{ fontWeight: 600, color: '#334155' }}>CommunityPulse AI</span>
+            <p>{totalCount} reports logged locally in Guntur.</p>
           </div>
         </div>
       </aside>

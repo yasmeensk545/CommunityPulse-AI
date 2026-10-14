@@ -14,8 +14,7 @@ export function AnalyticsView({ reports = [] }) {
   const total = reports.length;
   const resolved = reports.filter(r => r.status === 'Resolved').length;
   const inProgress = reports.filter(r => r.status === 'In Progress').length;
-  const underReview = reports.filter(r => r.status === 'Under Review').length;
-  const reported = reports.filter(r => r.status === 'Reported').length;
+  const pending = reports.filter(r => r.status === 'Pending' || r.status === 'Reported' || r.status === 'Under Review').length;
   const openReports = reports.filter(r => r.status !== 'Resolved').length;
 
   const critical = reports.filter(r => r.priority === 'Critical').length;
@@ -35,9 +34,8 @@ export function AnalyticsView({ reports = [] }) {
 
   // Status breakdown
   const statusCounts = [
-    { status: 'Reported', count: reported, color: '#64748B', bg: '#F1F5F9' },
-    { status: 'Under Review', count: underReview, color: '#D97706', bg: '#FEF3C7' },
-    { status: 'In Progress', count: inProgress, color: '#4F46E5', bg: '#EEF2FF' },
+    { status: 'Pending', count: pending, color: '#D97706', bg: '#FEF3C7' },
+    { status: 'In Progress', count: inProgress, color: '#2563EB', bg: '#DBEAFE' },
     { status: 'Resolved', count: resolved, color: '#16A34A', bg: '#DCFCE7' }
   ];
 
@@ -127,7 +125,7 @@ export function AnalyticsView({ reports = [] }) {
           icon={Activity}
           label="Active In Flight"
           value={inProgress}
-          trend={`${underReview} in review`}
+          trend={`${pending} pending review`}
           subtext="currently being worked"
           color="blue"
         />

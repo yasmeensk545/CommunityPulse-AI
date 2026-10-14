@@ -174,3 +174,74 @@ describe('CommunityPulse AI - Storage Service & CRUD Tests', () => {
     assert.ok(resetList.length >= 7);
   });
 });
+
+describe('CommunityPulse AI - Advanced Master Prompt Features', () => {
+  it('should generate collision-free report IDs in CP-2026-XXXXX format', () => {
+    const newId = storageService.saveReport({
+      title: 'Broken handrail on municipal ramp',
+      description: 'Handrail is loose and detached from masonry.',
+      locality: 'Ward 4 - Arundelpet, Guntur',
+      category: 'Accessibility'
+    });
+
+    assert.match(newId.id, /^CP-2026-\d{5}$/, 'ID should match CP-2026-XXXXX');
+  });
+
+  it('should handle 2-minute client rate limiting correctly', () => {
+    storageService.clearRateLimit();
+    assert.strictEqual(storageService.getRateLimitRemainingSeconds(), 0);
+
+    storageService.recordSubmissionTime();
+    const remaining = storageService.getRateLimitRemainingSeconds();
+    assert.ok(remaining > 115 && remaining <= 120, `Expected ~120s remaining, got ${remaining}`);
+
+    storageService.clearRateLimit();
+    assert.strictEqual(storageService.getRateLimitRemainingSeconds(), 0);
+  });
+
+  it('should authenticate staff with demo credentials and manage session', () => {
+    storageService.logoutStaff();
+    assert.strictEqual(storageService.isStaffAuthenticated(), false);
+
+    // Invalid credentials
+    const badLogin = storageService.loginStaff('STAFF-01', 'wrongpass');
+    assert.strictEqual(badLogin.success, false);
+    assert.strictEqual(storageService.isStaffAuthenticated(), false);
+
+    // Valid credentials
+    const goodLogin = storageService.loginStaff('STAFF-01', 'admin123');
+    assert.strictEqual(goodLogin.success, true);
+    assert.strictEqual(storageService.isStaffAuthenticated(), true);
+    assert.strictEqual(storageService.getStaffSession().staffId, 'STAFF-01');
+
+    storageService.logoutStaff();
+    assert.strictEqual(storageService.isStaffAuthenticated(), false);
+  });
+
+  it('should keep public notes visible and internal notes confidential', () => {
+    const report = storageService.saveReport({
+      title: 'Exposed electrical wires at bus stop',
+      description: 'Wires hanging from broken junction box near bus shelter.',
+      locality: 'Ward 11 - Lodge Center, Guntur',
+      category: 'Public Safety',
+      priority: 'Critical'
+    });
+
+    storageService.updateReportStatus(
+      report.id,
+      'In Progress',
+      'Crew dispatched. Junction box covered with safety shield.',
+      'Contractor electrician invoiced ticket #5512. Check safety audit log.',
+      'Staff Officer Reddy',
+      'Bureau of Street Lighting & Electrical Utilities'
+    );
+
+    const updated = storageService.getReportById(report.id);
+    assert.strictEqual(updated.status, 'In Progress');
+    assert.strictEqual(updated.publicNote, 'Crew dispatched. Junction box covered with safety shield.');
+    assert.strictEqual(updated.internalNotes.length, 1);
+    assert.strictEqual(updated.internalNotes[0].text, 'Contractor electrician invoiced ticket #5512. Check safety audit log.');
+    assert.strictEqual(updated.internalNotes[0].author, 'Staff Officer Reddy');
+  });
+});
+

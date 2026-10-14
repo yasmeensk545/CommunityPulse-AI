@@ -170,10 +170,16 @@ The automated test suite verifies:
 
 ---
 
-## 8. Limitations & Future Roadmap
-- **Production Data Layer:** The current prototype uses browser `localStorage` for zero-friction evaluation. Future releases will integrate with a PostgreSQL/PostGIS backend with spatial queries (`ST_DWithin`) for radius-based geographic clustering.
-- **Citizen Communication:** Expansion to two-way automated SMS/WhatsApp alerts notifying citizens when crew arrives on-site.
-- **Multilingual Support:** Auto-translation of citizen reports into English for municipal work orders while preserving the reporter's native language.
+## 8. Data Storage & Production Architecture
+Demo mode uses localStorage. localStorage is not shared across devices. For production, connect a secure shared backend such as Firebase or Supabase, enforce server-side authentication and authorization, and use a persistent database.
+
+### Demo Authentication & Department Roles
+- **Citizen Access:** Public access without authentication. Citizens can submit issues (`/report`), track status (`/track`), and view community issues (`/directory`) with zero login barriers.
+- **Department Staff Portal (`/department` & `/department-login`):** Protected route for municipal crew coordination.
+  - **Demo Credentials:** Staff ID: `STAFF-01` | Password: `admin123`
+  - **Public Notes vs. Internal Notes:** Field staff can publish citizen-facing status updates (`publicNote`) while keeping operational logs, work order IDs, and police coordination strictly internal and confidential (`internalNotes`).
+  - **Client Rate Limiting:** Enforces a 2-minute cooldown countdown between consecutive issue submissions per device to prevent automated spam.
+  - **Standardized Ticket Format:** Collision-checked `CP-2026-XXXXX` identifiers.
 
 ---
 

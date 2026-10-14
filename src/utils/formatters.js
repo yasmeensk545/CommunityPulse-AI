@@ -103,30 +103,23 @@ export function getStatusMeta(status) {
     case 'In Progress':
       return {
         label: 'In Progress',
-        bg: '#E0E7FF',
-        text: '#3730A3',
-        border: '#A5B4FC',
+        bg: '#DBEAFE',
+        text: '#1E40AF',
+        border: '#93C5FD',
         badgeClass: 'badge-status-inprogress',
-        dotColor: '#4F46E5'
+        dotColor: '#2563EB'
       };
+    case 'Pending':
     case 'Under Review':
-      return {
-        label: 'Under Review',
-        bg: '#FEF3C7',
-        text: '#92400E',
-        border: '#FCD34D',
-        badgeClass: 'badge-status-underreview',
-        dotColor: '#D97706'
-      };
     case 'Reported':
     default:
       return {
-        label: 'Reported',
-        bg: '#F1F5F9',
-        text: '#334155',
-        border: '#CBD5E1',
-        badgeClass: 'badge-status-reported',
-        dotColor: '#64748B'
+        label: status === 'Reported' || status === 'Under Review' ? 'Pending' : (status || 'Pending'),
+        bg: '#FEF3C7',
+        text: '#92400E',
+        border: '#FCD34D',
+        badgeClass: 'badge-status-pending',
+        dotColor: '#D97706'
       };
   }
 }

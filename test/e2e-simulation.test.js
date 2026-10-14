@@ -85,23 +85,30 @@ describe('CommunityPulse AI - Complete End-to-End Simulation', () => {
   });
 
   // 4. Status Update and Resolution Note Flow
-  it('4. should update status workflow and append field resolution notes', () => {
-    // Transition to Under Review
+  it('4. should update status workflow and handle public and internal notes', () => {
+    // Legacy 'Under Review' maps to 'Pending'
     let updated = storageService.updateReport(createdReportId, { status: 'Under Review' });
-    assert.strictEqual(updated.status, 'Under Review');
+    assert.strictEqual(updated.status, 'Pending', 'Legacy status should map to Pending');
 
     // Transition to In Progress
     updated = storageService.updateReport(createdReportId, { status: 'In Progress' });
     assert.strictEqual(updated.status, 'In Progress');
 
-    // Add field note
-    const withNote = storageService.addResolutionNote(
+    // Add staff internal note
+    const withNote = storageService.addInternalNote(
       createdReportId,
       'Main intake valve isolated at 11:45 AM. Pressure stabilized.',
       'Crew Lead Higgins'
     );
-    assert.strictEqual(withNote.resolutionNotes.length, 1);
-    assert.strictEqual(withNote.resolutionNotes[0].author, 'Crew Lead Higgins');
+    assert.strictEqual(withNote.internalNotes.length, 1);
+    assert.strictEqual(withNote.internalNotes[0].author, 'Crew Lead Higgins');
+
+    // Set citizen public note
+    const withPublic = storageService.updateReportPublicNote(
+      createdReportId,
+      'Water crew on site. Pipe isolated and repair underway.'
+    );
+    assert.strictEqual(withPublic.publicNote, 'Water crew on site. Pipe isolated and repair underway.');
 
     // Transition to Resolved
     const resolved = storageService.updateReport(createdReportId, { status: 'Resolved' });

@@ -5,10 +5,12 @@ import {
   Menu, 
   Sparkles,
   HelpCircle,
-  ShieldCheck,
   Search,
   Home,
-  List
+  List,
+  Building2,
+  BarChart3,
+  Lock
 } from 'lucide-react';
 import { storageService } from '../services/storage.js';
 
@@ -21,6 +23,7 @@ export function Navbar({
   onOpenDemoGuide
 }) {
   const hasApiKey = Boolean(storageService.getApiKey());
+  const isStaffLoggedIn = storageService.isStaffAuthenticated();
 
   return (
     <header className="top-navbar">
@@ -39,19 +42,19 @@ export function Navbar({
         <div 
           onClick={() => setActiveTab('home')}
           style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
-          title="Return to Home"
+          title="Return to Citizen Home"
         >
           <div
             style={{
               width: '36px',
               height: '36px',
               borderRadius: '9px',
-              background: 'linear-gradient(135deg, #0D9488 0%, #0F172A 100%)',
+              background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#FFFFFF',
-              boxShadow: '0 2px 6px rgba(13, 148, 136, 0.3)'
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)'
             }}
           >
             <Activity size={20} />
@@ -63,7 +66,7 @@ export function Navbar({
               </span>
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
                   color: '#FFFFFF',
                   fontSize: '0.65rem',
                   fontWeight: 700,
@@ -77,20 +80,20 @@ export function Navbar({
               </span>
             </div>
             <p className="text-muted" style={{ fontSize: '0.72rem', display: 'none', marginTop: '-2px' }} id="navbar-tagline">
-              Make Your Community Better
+              Smarter Communities. Better Living.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Middle: Desktop Citizen Navigation Pills */}
+      {/* Middle: Desktop Navigation Pills */}
       <nav style={{ display: 'none', alignItems: 'center', gap: '0.35rem' }} id="desktop-nav-pills">
         <button
           onClick={() => setActiveTab('home')}
           className="btn btn-sm"
           style={{
-            backgroundColor: activeTab === 'home' ? '#F0FDFA' : 'transparent',
-            color: activeTab === 'home' ? '#0F766E' : '#475569',
+            backgroundColor: activeTab === 'home' ? '#EFF6FF' : 'transparent',
+            color: activeTab === 'home' ? '#2563EB' : '#475569',
             fontWeight: activeTab === 'home' ? 700 : 500,
             borderRadius: '8px',
             fontSize: '0.825rem'
@@ -104,8 +107,8 @@ export function Navbar({
           onClick={() => setActiveTab('track')}
           className="btn btn-sm"
           style={{
-            backgroundColor: activeTab === 'track' ? '#F0FDFA' : 'transparent',
-            color: activeTab === 'track' ? '#0F766E' : '#475569',
+            backgroundColor: activeTab === 'track' ? '#EFF6FF' : 'transparent',
+            color: activeTab === 'track' ? '#2563EB' : '#475569',
             fontWeight: activeTab === 'track' ? 700 : 500,
             borderRadius: '8px',
             fontSize: '0.825rem'
@@ -119,32 +122,56 @@ export function Navbar({
           onClick={() => setActiveTab('directory')}
           className="btn btn-sm"
           style={{
-            backgroundColor: activeTab === 'directory' ? '#F0FDFA' : 'transparent',
-            color: activeTab === 'directory' ? '#0F766E' : '#475569',
+            backgroundColor: activeTab === 'directory' ? '#EFF6FF' : 'transparent',
+            color: activeTab === 'directory' ? '#2563EB' : '#475569',
             fontWeight: activeTab === 'directory' ? 700 : 500,
             borderRadius: '8px',
             fontSize: '0.825rem'
           }}
         >
           <List size={15} />
-          <span>All Issues</span>
+          <span>Issues</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('admin')}
+          onClick={() => setActiveTab('analytics')}
           className="btn btn-sm"
           style={{
-            backgroundColor: activeTab === 'admin' ? '#1E293B' : '#F1F5F9',
-            color: activeTab === 'admin' ? '#FFFFFF' : '#334155',
+            backgroundColor: activeTab === 'analytics' ? '#EFF6FF' : 'transparent',
+            color: activeTab === 'analytics' ? '#2563EB' : '#475569',
+            fontWeight: activeTab === 'analytics' ? 700 : 500,
+            borderRadius: '8px',
+            fontSize: '0.825rem'
+          }}
+        >
+          <BarChart3 size={15} />
+          <span>Analytics</span>
+        </button>
+
+        {/* Protected Department Staff Portal */}
+        <button
+          onClick={() => {
+            if (isStaffLoggedIn) {
+              setActiveTab('department');
+            } else {
+              setActiveTab('department-login');
+            }
+          }}
+          className="btn btn-sm"
+          style={{
+            backgroundColor: (activeTab === 'department' || activeTab === 'department-login') ? '#1E293B' : '#F1F5F9',
+            color: (activeTab === 'department' || activeTab === 'department-login') ? '#FFFFFF' : '#334155',
             fontWeight: 600,
             borderRadius: '8px',
             fontSize: '0.78rem',
-            marginLeft: '0.5rem'
+            marginLeft: '0.5rem',
+            border: '1px solid #CBD5E1'
           }}
-          title="Administrative operations, analytics & preventive insights"
+          title={isStaffLoggedIn ? 'Department Management Dashboard' : 'Authorized Staff Login Required'}
+          id="navbar-department-btn"
         >
-          <ShieldCheck size={14} />
-          <span>Admin & Insights</span>
+          {isStaffLoggedIn ? <Building2 size={14} /> : <Lock size={14} />}
+          <span>{isStaffLoggedIn ? 'Department Queue' : 'Staff Portal'}</span>
         </button>
       </nav>
 
@@ -163,7 +190,7 @@ export function Navbar({
 
         {/* AI Engine Status Pill (subtle) */}
         <span
-          title={hasApiKey ? 'Google Gemini 2.5 Flash Connected' : 'Offline Rule-Based Triage Engine Active'}
+          title={hasApiKey ? 'Google Gemini 2.5 Flash Connected' : 'Local Heuristic Decision Engine Active'}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -171,9 +198,9 @@ export function Navbar({
             fontSize: '0.72rem',
             padding: '0.25rem 0.55rem',
             borderRadius: '6px',
-            backgroundColor: hasApiKey ? '#F0FDF4' : '#F0FDFA',
-            color: hasApiKey ? '#166534' : '#0F766E',
-            border: `1px solid ${hasApiKey ? '#BBF7D0' : '#CCFBF1'}`
+            backgroundColor: hasApiKey ? '#F0FDF4' : '#EFF6FF',
+            color: hasApiKey ? '#166534' : '#1D4ED8',
+            border: `1px solid ${hasApiKey ? '#BBF7D0' : '#BFDBFE'}`
           }}
           id="navbar-ai-badge"
         >
@@ -181,11 +208,11 @@ export function Navbar({
           <span>{hasApiKey ? 'Gemini AI' : 'Offline AI'}</span>
         </span>
 
-        {/* Primary CTA: Report a Problem */}
+        {/* Primary CTA: Blue Report a Problem */}
         <button
           onClick={onOpenReportModal}
-          className="btn btn-primary"
-          style={{ fontWeight: 700, padding: '0.55rem 1.1rem' }}
+          className="btn btn-blue"
+          style={{ fontWeight: 700, padding: '0.55rem 1.1rem', borderRadius: '10px' }}
           id="btn-report-issue-main"
         >
           <Plus size={16} />

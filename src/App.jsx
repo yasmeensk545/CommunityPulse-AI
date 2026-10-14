@@ -1,9 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
 import { CitizenHomeView } from './components/CitizenHomeView.jsx';
 import { TrackReportView } from './components/TrackReportView.jsx';
+import { DepartmentLoginView } from './components/DepartmentLoginView.jsx';
+import { DepartmentDashboardView } from './components/DepartmentDashboardView.jsx';
 import { IssueDirectory } from './components/IssueDirectory.jsx';
+import { AnalyticsView } from './components/AnalyticsView.jsx';
+import { InsightsView } from './components/InsightsView.jsx';
 import { AdminPortalView } from './components/AdminPortalView.jsx';
 import { ReportFormModal } from './components/ReportFormModal.jsx';
 import { IssueDetailModal } from './components/IssueDetailModal.jsx';
@@ -12,21 +16,94 @@ import { DemoGuideModal } from './components/DemoGuideModal.jsx';
 import { Toast } from './components/Toast.jsx';
 import { storageService } from './services/storage.js';
 
+// Route pathname mapping
+const ROUTE_MAP = {
+  home: '/',
+  track: '/track',
+  'department-login': '/department-login',
+  department: '/department',
+  directory: '/directory',
+  analytics: '/analytics',
+  insights: '/insights',
+  admin: '/admin'
+};
+
+function getTabFromPathname(pathname) {
+  const clean = (pathname || '').toLowerCase().replace(/\/$/, '') || '/';
+  if (clean === '/track') return 'track';
+  if (clean === '/report') return 'home'; // /report opens home with report modal
+  if (clean === '/department-login') return 'department-login';
+  if (clean === '/department') {
+    return storageService.isStaffAuthenticated() ? 'department' : 'department-login';
+  }
+  if (clean === '/directory' || clean === '/issues') return 'directory';
+  if (clean === '/analytics') return 'analytics';
+  if (clean === '/insights') return 'insights';
+  if (clean === '/admin') return 'admin';
+  return 'home';
+}
+
 export default function App() {
-  // 'home' is the default citizen-friendly view!
-  const [activeTab, setActiveTab] = useState('home');
+  // Initialize route from current window.location.pathname
+  const [activeTab, setActiveTabState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return getTabFromPathname(window.location.pathname);
+    }
+    return 'home';
+  });
+
   const [reports, setReports] = useState(() => storageService.getReports());
   const [selectedReport, setSelectedReport] = useState(null);
   const [trackingReportId, setTrackingReportId] = useState('');
+  const [reportModalCategory, setReportModalCategory] = useState('Road Damage');
 
   // Modals state
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.toLowerCase().startsWith('/report');
+    }
+    return false;
+  });
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Toast notifications state
   const [toasts, setToasts] = useState([]);
+
+  // URL synchronization helper
+  const setActiveTab = useCallback((tab, pushUrl = true) => {
+    // Authentication guard for department
+    if (tab === 'department' && !storageService.isStaffAuthenticated()) {
+      setActiveTabState('department-login');
+      if (pushUrl && typeof window !== 'undefined') {
+        window.history.pushState(null, '', '/department-login');
+      }
+      return;
+    }
+
+    setActiveTabState(tab);
+    if (pushUrl && typeof window !== 'undefined') {
+      const targetPath = ROUTE_MAP[tab] || '/';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
+      }
+    }
+  }, []);
+
+  // Sync browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const tab = getTabFromPathname(window.location.pathname);
+      setActiveTabState(tab);
+      if (window.location.pathname.toLowerCase().startsWith('/report')) {
+        setIsReportModalOpen(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Trigger non-intrusive toast notification
   const triggerToast = useCallback((message, type = 'success') => {
@@ -44,22 +121,25 @@ export default function App() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+  // Open Report Modal with optional category preselection
+  const handleOpenReportModal = (category = 'Road Damage') => {
+    setReportModalCategory(category);
+    setIsReportModalOpen(true);
+  };
+
   // Create new report
   const handleReportSubmit = (newReportData) => {
     try {
       const saved = storageService.saveReport(newReportData);
       setReports(storageService.getReports());
-      triggerToast(`Report #${saved.id} submitted! City teams have been notified.`, 'success');
-      setIsReportModalOpen(false);
-      // Automatically switch to tracking view so the citizen sees their report timeline!
+      triggerToast(`Report #${saved.id} submitted! Dispatched to municipal services.`, 'success');
       setTrackingReportId(saved.id);
-      setActiveTab('track');
     } catch (err) {
       triggerToast(`Failed to save report: ${err.message}`, 'error');
     }
   };
 
-  // Change report status
+  // Change report status (from details modal or direct update)
   const handleStatusChange = (id, newStatus) => {
     try {
       const updated = storageService.updateReport(id, { status: newStatus });
@@ -71,16 +151,35 @@ export default function App() {
     }
   };
 
-  // Add resolution/inspection note
+  // Add internal note
   const handleAddNote = (id, text, author) => {
     try {
-      const updated = storageService.addResolutionNote(id, text, author);
+      const updated = storageService.addInternalNote(id, text, author);
       setReports(storageService.getReports());
       setSelectedReport(updated);
-      triggerToast('Inspection note posted to report timeline.', 'success');
+      triggerToast('Internal note saved to report audit log.', 'success');
     } catch (err) {
       triggerToast(`Failed to add note: ${err.message}`, 'error');
     }
+  };
+
+  // Department report update callback
+  const handleDepartmentReportUpdated = (updatedReport) => {
+    setReports(storageService.getReports());
+    triggerToast(`Report #${updatedReport.id} status updated to "${updatedReport.status}".`, 'success');
+  };
+
+  // Staff Login Success
+  const handleStaffLoginSuccess = (session) => {
+    triggerToast(`Welcome, ${session.staffId}! Authorized department session active.`, 'success');
+    setActiveTab('department');
+  };
+
+  // Staff Logout
+  const handleStaffLogout = () => {
+    storageService.logoutStaff();
+    triggerToast('Logged out of department staff session.', 'info');
+    setActiveTab('department-login');
   };
 
   // Delete report
@@ -116,7 +215,7 @@ export default function App() {
     setSelectedReport(null);
   };
 
-  // Select report and open modal
+  // Select report and open detail modal
   const handleSelectReport = (report) => {
     const fresh = reports.find(r => r.id === report.id) || report;
     setSelectedReport(fresh);
@@ -129,10 +228,10 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         reports={reports}
-        onOpenReportModal={() => setIsReportModalOpen(true)}
+        onOpenReportModal={() => handleOpenReportModal()}
         onResetData={() => {
           handleResetData();
-          triggerToast('Restored sample neighbourhood reports.', 'success');
+          triggerToast('Restored sample Guntur neighbourhood reports.', 'success');
         }}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         isSidebarOpen={isSidebarOpen}
@@ -145,7 +244,7 @@ export default function App() {
         <Navbar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onOpenReportModal={() => setIsReportModalOpen(true)}
+          onOpenReportModal={() => handleOpenReportModal()}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
           onOpenDemoGuide={() => setIsDemoGuideOpen(true)}
@@ -153,18 +252,18 @@ export default function App() {
 
         {/* View Switcher Container */}
         <main className="content-container">
-          {/* 1. Citizen Home Page */}
+          {/* 1. Citizen Home Page (Public Access) */}
           {activeTab === 'home' && (
             <CitizenHomeView
               reports={reports}
-              onOpenReportModal={() => setIsReportModalOpen(true)}
+              onOpenReportModal={(cat) => handleOpenReportModal(cat)}
               onNavigateToTrack={() => setActiveTab('track')}
               onSelectReport={handleSelectReport}
               onViewAllReports={() => setActiveTab('directory')}
             />
           )}
 
-          {/* 2. Track Report View */}
+          {/* 2. Track Report View (Public Access) */}
           {activeTab === 'track' && (
             <TrackReportView
               reports={reports}
@@ -172,21 +271,53 @@ export default function App() {
             />
           )}
 
-          {/* 3. All Community Issues Directory */}
+          {/* 3. Department Staff Login View */}
+          {activeTab === 'department-login' && (
+            <DepartmentLoginView
+              onLoginSuccess={handleStaffLoginSuccess}
+              onNavigateHome={() => setActiveTab('home')}
+            />
+          )}
+
+          {/* 4. Protected Department Operations Dashboard */}
+          {activeTab === 'department' && (
+            <DepartmentDashboardView
+              reports={reports}
+              onReportUpdated={handleDepartmentReportUpdated}
+              onLogout={handleStaffLogout}
+              onNavigateHome={() => setActiveTab('home')}
+            />
+          )}
+
+          {/* 5. All Community Issues Directory */}
           {activeTab === 'directory' && (
             <IssueDirectory
               reports={reports}
               onSelectReport={handleSelectReport}
-              onOpenReportModal={() => setIsReportModalOpen(true)}
+              onOpenReportModal={() => handleOpenReportModal()}
             />
           )}
 
-          {/* 4. Admin & Insights Portal */}
+          {/* 6. Live Analytics */}
+          {activeTab === 'analytics' && (
+            <AnalyticsView
+              reports={reports}
+            />
+          )}
+
+          {/* 7. Community Insights */}
+          {activeTab === 'insights' && (
+            <InsightsView
+              reports={reports}
+            />
+          )}
+
+          {/* 8. Admin & Insights Portal (Legacy/Deep View) */}
           {activeTab === 'admin' && (
             <AdminPortalView
               reports={reports}
               onSelectReport={handleSelectReport}
-              onOpenReportModal={() => setIsReportModalOpen(true)}
+              onOpenReportModal={() => handleOpenReportModal()}
               onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
             />
           )}
@@ -214,10 +345,16 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span>“AI for Better Living & Smarter Communities”</span>
             <button
-              onClick={() => setActiveTab('admin')}
-              style={{ color: '#0D9488', fontWeight: 600, textDecoration: 'underline', fontSize: '0.75rem' }}
+              onClick={() => {
+                if (storageService.isStaffAuthenticated()) {
+                  setActiveTab('department');
+                } else {
+                  setActiveTab('department-login');
+                }
+              }}
+              style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'underline', fontSize: '0.75rem' }}
             >
-              City Admin Portal
+              Department Staff Portal
             </button>
           </div>
         </footer>
@@ -228,7 +365,12 @@ export default function App() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         onSubmitSuccess={handleReportSubmit}
+        onNavigateToTrack={(id) => {
+          setTrackingReportId(id);
+          setActiveTab('track');
+        }}
         existingReports={reports}
+        initialCategory={reportModalCategory}
       />
 
       <IssueDetailModal

@@ -108,7 +108,7 @@ export function IssueDetailModal({
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }} id="status-buttons-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }} id="status-buttons-grid">
               {VALID_STATUSES.map((status) => {
                 const isCurrent = report.status === status;
                 return (
